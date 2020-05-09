@@ -65,8 +65,9 @@ process get_sig_names {
 
 process run_cojo {
     tag "${name}"
-    cpus 6
+    cpus 8
     maxForks 1
+    time 48.h
     publishDir "${params.outdir}"
     input:
         tuple val(name), file(cojo), file(snplist)
@@ -74,7 +75,7 @@ process run_cojo {
         file("*.cojo")
     script:
     """
-    gcta64 --bfile ${params.raw_dir}/${name} --chr ${name.split("_")[2]} --maf 0.01 --cojo-file ${cojo} --cojo-slct --out ${name} --thread-num 6
+    gcta64 --bfile ${params.raw_dir}/${name} --chr ${name.split("_")[2]} --maf 0.01 --cojo-file ${cojo} --cojo-slct --out ${name} --thread-num 8
     """
 }
 
