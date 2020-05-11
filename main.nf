@@ -79,6 +79,35 @@ process run_cojo {
     """
 }
 
+process merge_jma {
+    tag "${name}"
+    publishDir "${params.outdir}"
+    input:
+        file(cojo)
+    output:
+        file("*merged.jma.cojo")
+    script:
+    """
+    head -n 1 -q ${params.plinkpat}.jma.cojo \
+    | head -n1 > ${params.plinkpre}merged.jma.cojo
+    tail -n +2 -q *.jma.cojo \
+    | sort -k1,1n -k2,2V >> ${params.plinkpre}merged.jma.cojo
+    """
+}
+
+process plot_jma {
+    tag "${name}"
+    publishDir "${params.outdir}"
+    input:
+        file(merged_jma)
+    output:
+        file("*.png")
+    script:
+    """
+    python ${baseDir}/bin/plot_jma.py ${merged_jma}
+    """
+}
+
 workflow {
     main:
     names = Channel.fromPath( "${params.raw_dir}/${params.plinkpat}.bim" )
@@ -88,4 +117,8 @@ workflow {
     cojo = prepare_cojo_input(range)
     sig_list = get_sig_list()
     get_sig_names().splitCsv().join(cojo).combine(sig_list) | run_cojo
+    merged_jma = Channel.fromPath( 
+        "${params.outdir}/${params.plinkpat}.jma.cojo" 
+        ).collect() | merge_jma | plot_jma
+
 }
